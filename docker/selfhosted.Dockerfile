@@ -2,7 +2,8 @@
 # instead of Alpine to avoid DNS resolution issues in production.
 ARG ELIXIR_VERSION=1.18.4
 ARG OTP_VERSION=27.2.4
-ARG DEBIAN_VERSION=bookworm-20250428-slim
+#ARG DEBIAN_VERSION=bookworm-20250428-slim
+ARG DEBIAN_VERSION=bookworm-slim
 
 ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
 ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
@@ -29,8 +30,8 @@ RUN apt-get update -y && \
     mix local.rebar --force && \
     # FFmpeg (latest build that doesn't cause an illegal instruction error for some users - see #347)
     export FFMPEG_DOWNLOAD=$(case ${TARGETPLATFORM:-linux/amd64} in \
-    "linux/amd64")   echo "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/autobuild-2026-09-22-18-18/ffmpeg-N-126767-g7499a8ba58-linux64-gpl.tar.xz"   ;; \
-    "linux/arm64")   echo "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/autobuild-2026-09-22-18-18/ffmpeg-N-126767-g7499a8ba58-linuxarm64-gpl.tar.xz" ;; \
+    "linux/amd64")   echo "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz"   ;; \
+    "linux/arm64")   echo "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linuxarm64-gpl.tar.xz" ;; \
     *)               echo ""        ;; esac) && \
     curl -L ${FFMPEG_DOWNLOAD} --output /tmp/ffmpeg.tar.xz && \
     tar -xf /tmp/ffmpeg.tar.xz --strip-components=2 --no-anchored -C /usr/local/bin/ "ffmpeg" && \
@@ -126,8 +127,10 @@ ENV LC_ALL=en_US.UTF-8
 WORKDIR "/app"
 
 # Set up data volumes
-RUN mkdir -p /config /downloads /etc/elixir_tzdata_data /etc/yt-dlp/plugins && \ 
+RUN mkdir -p /config /downloads /etc/elixir_tzdata_data /etc/yt-dlp/plugins && \
   chmod ugo+rw /etc/elixir_tzdata_data /etc/yt-dlp /etc/yt-dlp/plugins /usr/local/bin /usr/local/bin/yt-dlp
+
+RUN curl -L https://github.com/Brainicism/bgutil-ytdlp-pot-provider/releases/latest/download/bgutil-ytdlp-pot-provider.zip --output /etc/yt-dlp/plugins/bgutil-ytdlp-pot-provider.zip
 
 # set runner ENV
 ENV MIX_ENV="prod"
